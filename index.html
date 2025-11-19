@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Семейный бюджет</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 10px;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            padding-top: max(20px, env(safe-area-inset-top));
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .month-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .month-navigation button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .month-navigation button:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .current-month {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .income-type-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 4px;
+            margin-top: 10px;
+        }
+        
+        .income-type-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+            word-break: break-word;
+            white-space: normal;
+            line-height: 1.2;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .income-type-btn.active {
+            background: white;
+            color: #6a11cb;
+        }
+        
+        .summary {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .summary-item {
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            flex: 1;
+        }
+        
+        .summary-item:active {
+            transform: scale(0.95);
+        }
+        
+        .summary-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .income {
+            color: #28a745;
+        }
+        
+        .expenses {
+            color: #dc3545;
+        }
+        
+        .balance {
+            color: #007bff;
+        }
+        
+        .distribution-btn {
+            background: #6a11cb;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            margin: 5px 0;
+            width: 100%;
+        }
+        
+        .distribution-btn:active {
+            background: #5a0db3;
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: #f8f9fa;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 14px 12px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+            min-width: 120px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid #6a11cb;
+            color: #6a11cb;
+            font-weight: 600;
+        }
+        
+        .content {
+            padding: 15px;
+        }
+        
+        .transaction-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            margin-bottom: 6px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        input, select, textarea {
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #6a11cb;
+        }
+        
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background-color: #6a11cb;
+            color: white;
+        }
+        
+        .btn-primary:active {
+            background-color: #5a0db3;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:active {
+            background-color: #c82333;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: #6a11cb;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 15px;
+            padding: 8px 0;
+            font-weight: 500;
+        }
+        
+        .distribution-section {
+            margin-top: 20px;
+        }
+        
+        .distribution-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .distribution-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .distribution-category {
+            flex: 1;
+            font-size: 0.95rem;
+        }
+        
+        .distribution-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .distribution-percent {
+            width: 70px;
+            text-align: right;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: white;
+        }
+        
+        .distribution-amount {
+            font-weight: 600;
+            color: #6a11cb;
+            width: 100px;
+            text-align: right;
+            font-size: 0.9rem;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #6a11cb;
+            border-radius: 3px;
+        }
+        
+        .distribution-summary {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .distribution-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .distribution-actions button {
+            flex: 1;
+        }
+        
+        .add-category-btn {
+            background: none;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 1.5rem;
+            color: #6a11cb;
+            background-color: rgba(106, 17, 203, 0.1);
+        }
+        
+        .add-category-btn:active {
+            background-color: rgba(106, 17, 203, 0.2);
+        }
+        
+        .settings-btn {
+            background: none;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 1.2rem;
+            color: #6a11cb;
+            background-color: rgba(106, 17, 203, 0.1);
+        }
+        
+        .settings-btn:active {
+            background-color: rgba(106, 17, 203, 0.2);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-body {
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .category-actions {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .action-btn {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+        
+        .operations-list {
+            max-height: 50vh;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .operation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px;
+            border-bottom: 1px solid #e9ecef;
+            align-items: center;
+        }
+        
+        .operation-info {
+            flex: 1;
+        }
+        
+        .operation-description {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .operation-category {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .operation-amount.income {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .operation-amount.expense {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .income-combined-btn {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            width: 100%;
+        }
+        
+        .distribution-info {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #6a11cb;
+        }
+        
+        .distribution-info h4 {
+            margin-bottom: 10px;
+            color: #6a11cb;
+        }
+        
+        .distribution-info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .import-export {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .import-export button {
+            flex: 1;
+        }
+        
+        .settings-menu {
+            position: absolute;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 8px 0;
+            z-index: 100;
+            min-width: 150px;
+            display: none;
+        }
+        
+        .settings-menu.show {
+            display: block;
+        }
+        
+        .settings-menu-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        
+        .settings-menu-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .edit-mode-active {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .edit-mode-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #856404;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Семейный бюджет</h1>
+            <div class="month-navigation">
+                <button id="prev-month">←</button>
+                <div class="current-month" id="current-month">Январь 2023</div>
+                <button id="next-month">→</button>
+            </div>
+            <div class="income-type-toggle">
+                <button class="income-type-btn active" data-type="salary">Зарплата</button>
+                <button class="income-type-btn" data-type="advance">Аванс</button>
+            </div>
+            <button class="income-combined-btn" id="combined-income-btn">Общая информация по доходам</button>
+        </header>
+        
+        <div class="summary">
+            <div class="summary-item">
+                <button class="distribution-btn" id="distribution-summary-btn">Распределение</button>
+            </div>
+            <div class="summary-item" id="balance-summary">
+                <div>Баланс</div>
+                <div class="summary-value balance" id="total-balance">0 ₽</div>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="add">Добавить операцию</div>
+            <div class="tab" data-tab="distribution">Настройка распределения</div>
+        </div>
+        
+        <div class="content">
+            <div id="add-tab" class="tab-content">
+                <form class="transaction-form" id="transaction-form">
+                    <div class="form-group">
+                        <label for="type">Тип операции</label>
+                        <select id="type" required>
+                            <option value="income">Доход</option>
+                            <option value="expense">Расход</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Категория</label>
+                        <select id="category" required>
+                            <option value="Зарплата">Зарплата</option>
+                            <option value="Аванс">Аванс</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">Сумма (₽)</label>
+                        <input type="number" id="amount" min="0" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Описание</label>
+                        <textarea id="description" placeholder="Введите описание операции"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date">Дата</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Добавить операцию</button>
+                </form>
+                
+                <div id="distribution-info-section" class="distribution-info" style="display: none;">
+                    <h4>Распределение доходов</h4>
+                    <div id="distribution-info-content"></div>
+                </div>
+            </div>
+            
+            <div id="distribution-tab" class="tab-content" style="display: none;">
+                <div class="distribution-section">
+                    <div class="distribution-header">
+                        <h3>Настройка распределения</h3>
+                        <button class="add-category-btn" id="add-category-btn" title="Добавить категорию">+</button>
+                    </div>
+                    
+                    <div id="distribution-list"></div>
+                    
+                    <div class="distribution-summary">
+                        <div class="summary-row">
+                            <div>Общий доход:</div>
+                            <div id="total-income-summary">0 ₽</div>
+                        </div>
+                        <div class="summary-row">
+                            <div>Уже распределено:</div>
+                            <div id="allocated-summary">0 ₽</div>
+                        </div>
+                        <div class="summary-row">
+                            <div>Доступно для распределения:</div>
+                            <div id="available-summary">0 ₽</div>
+                        </div>
+                        <div class="summary-row">
+                            <div>Использовано процентов:</div>
+                            <div id="used-percent">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="distribution-actions">
+                        <button class="btn-primary" id="apply-distribution">Применить распределение</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальные окна -->
+    <div class="modal" id="add-category-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Добавить категорию</div>
+                <button class="close-button" id="close-add-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="new-category-name">Название категории</label>
+                    <input type="text" id="new-category-name" placeholder="Введите название">
+                </div>
+                <div class="form-group">
+                    <label for="new-category-percent">Процент распределения</label>
+                    <input type="number" id="new-category-percent" placeholder="%" min="0" max="100" step="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-add-category">Отмена</button>
+                <button class="btn-primary" id="save-add-category">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="edit-category-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Редактировать категорию</div>
+                <button class="close-button" id="close-edit-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="edit-category-name">Название категории</label>
+                    <input type="text" id="edit-category-name" placeholder="Введите название">
+                </div>
+                <div class="form-group">
+                    <label for="edit-category-percent">Процент распределения</label>
+                    <input type="number" id="edit-category-percent" placeholder="%" min="0" max="100" step="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-edit-category">Отмена</button>
+                <button class="btn-primary" id="save-edit-category">Сохранить</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="delete-category-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Удалить категорию</div>
+                <button class="close-button" id="close-delete-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить категорию "<span id="delete-category-name"></span>"?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancel-delete-category">Отмена</button>
+                <button class="btn-danger" id="confirm-delete-category">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Меню настроек -->
+    <div class="settings-menu" id="settings-menu">
+        <button class="settings-menu-item" id="edit-distribution-btn">Редактирование</button>
+    </div>
+
+    <script>
+        // Данные приложения
+        let currentDate = new Date();
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let currentDistribution = JSON.parse(localStorage.getItem('currentDistribution')) || {};
+        let customCategories = JSON.parse(localStorage.getItem('customCategories')) || [];
+        let currentEditingCategory = null;
+        let currentIncomeType = 'salary';
+        let appliedDistributions = JSON.parse(localStorage.getItem('appliedDistributions')) || {};
+        let isEditMode = false;
+        
+        // Элементы DOM
+        const currentMonthElement = document.getElementById('current-month');
+        const prevMonthButton = document.getElementById('prev-month');
+        const nextMonthButton = document.getElementById('next-month');
+        const totalBalanceElement = document.getElementById('total-balance');
+        const balanceSummaryElement = document.getElementById('balance-summary');
+        const distributionSummaryBtn = document.getElementById('distribution-summary-btn');
+        const transactionForm = document.getElementById('transaction-form');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const distributionListElement = document.getElementById('distribution-list');
+        const applyDistributionButton = document.getElementById('apply-distribution');
+        const totalIncomeSummaryElement = document.getElementById('total-income-summary');
+        const allocatedSummaryElement = document.getElementById('allocated-summary');
+        const availableSummaryElement = document.getElementById('available-summary');
+        const usedPercentElement = document.getElementById('used-percent');
+        const addCategoryButton = document.getElementById('add-category-btn');
+        const incomeTypeButtons = document.querySelectorAll('.income-type-btn');
+        const combinedIncomeButton = document.getElementById('combined-income-btn');
+        const distributionInfoSection = document.getElementById('distribution-info-section');
+        const distributionInfoContent = document.getElementById('distribution-info-content');
+        
+        // Модальные окна
+        const addCategoryModal = document.getElementById('add-category-modal');
+        const editCategoryModal = document.getElementById('edit-category-modal');
+        const deleteCategoryModal = document.getElementById('delete-category-modal');
+        
+        // Меню настроек
+        const settingsMenu = document.getElementById('settings-menu');
+        const editDistributionBtn = document.getElementById('edit-distribution-btn');
+        
+        // Инициализация приложения
+        function init() {
+            updateMonthDisplay();
+            updateSummary();
+            updateDistribution();
+            updateDistributionInfo();
+            
+            document.getElementById('date').valueAsDate = new Date();
+            
+            // Обработчики событий
+            prevMonthButton.addEventListener('click', goToPreviousMonth);
+            nextMonthButton.addEventListener('click', goToNextMonth);
+            transactionForm.addEventListener('submit', addTransaction);
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            applyDistributionButton.addEventListener('click', applyDistribution);
+            addCategoryButton.addEventListener('click', showAddCategoryModal);
+            combinedIncomeButton.addEventListener('click', showCombinedIncomeInfo);
+            distributionSummaryBtn.addEventListener('click', showDistributionInfoPage);
+            balanceSummaryElement.addEventListener('click', showBalanceOperations);
+            
+            // Переключение типа дохода
+            incomeTypeButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const type = e.target.getAttribute('data-type');
+                    setIncomeType(type);
+                });
+            });
+            
+            // Модальные окна
+            document.getElementById('close-add-modal').addEventListener('click', hideAddCategoryModal);
+            document.getElementById('cancel-add-category').addEventListener('click', hideAddCategoryModal);
+            document.getElementById('save-add-category').addEventListener('click', saveNewCategory);
+            
+            document.getElementById('close-edit-modal').addEventListener('click', hideEditCategoryModal);
+            document.getElementById('cancel-edit-category').addEventListener('click', hideEditCategoryModal);
+            document.getElementById('save-edit-category').addEventListener('click', saveEditedCategory);
+            
+            document.getElementById('close-delete-modal').addEventListener('click', hideDeleteCategoryModal);
+            document.getElementById('cancel-delete-category').addEventListener('click', hideDeleteCategoryModal);
+            document.getElementById('confirm-delete-category').addEventListener('click', confirmDeleteCategoryAction);
+            
+            currentDistribution = getCurrentDistribution();
+        }
+        
+        // Основные функции
+        function updateMonthDisplay() {
+            const monthNames = [
+                'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+            ];
+            currentMonthElement.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+        }
+        
+        function goToPreviousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            updateMonthDisplay();
+            updateSummary();
+            updateDistribution();
+            updateDistributionInfo();
+        }
+        
+        function goToNextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            updateMonthDisplay();
+            updateSummary();
+            updateDistribution();
+            updateDistributionInfo();
+        }
+        
+        function setIncomeType(type) {
+            currentIncomeType = type;
+            saveCurrentDistribution(currentDistribution);
+            currentDistribution = getCurrentDistribution();
+            
+            incomeTypeButtons.forEach(button => {
+                if (button.getAttribute('data-type') === type) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            
+            updateSummary();
+            updateDistribution();
+            updateDistributionInfo();
+        }
+        
+        function addTransaction(e) {
+            e.preventDefault();
+            
+            const type = document.getElementById('type').value;
+            const category = document.getElementById('category').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const description = document.getElementById('description').value;
+            const date = document.getElementById('date').value;
+            
+            let incomeType = currentIncomeType;
+            if (type === 'income') {
+                incomeType = category === 'Зарплата' ? 'salary' : 'advance';
+            }
+            
+            const transaction = {
+                id: Date.now(),
+                type,
+                category,
+                amount,
+                incomeType,
+                description: description || `${category} - ${date}`,
+                date
+            };
+            
+            transactions.push(transaction);
+            saveTransactions();
+            updateSummary();
+            updateDistribution();
+            updateDistributionInfo();
+            
+            transactionForm.reset();
+            document.getElementById('date').valueAsDate = new Date();
+        }
+        
+        function saveTransactions() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+        
+        function saveCustomCategories() {
+            localStorage.setItem('customCategories', JSON.stringify(customCategories));
+        }
+        
+        function getCurrentDistribution() {
+            const key = `distribution_${currentIncomeType}`;
+            return JSON.parse(localStorage.getItem(key)) || {};
+        }
+        
+        function saveCurrentDistribution(distribution) {
+            const key = `distribution_${currentIncomeType}`;
+            localStorage.setItem(key, JSON.stringify(distribution));
+        }
+        
+        function saveAppliedDistributions() {
+            localStorage.setItem('appliedDistributions', JSON.stringify(appliedDistributions));
+        }
+        
+        function updateSummary() {
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthTransactions = transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transactionDate.getMonth() === currentMonth && 
+                       transactionDate.getFullYear() === currentYear &&
+                       transaction.incomeType === currentIncomeType;
+            });
+            
+            const totalIncome = monthTransactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const totalExpenses = monthTransactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const balance = totalIncome - totalExpenses;
+            
+            totalBalanceElement.textContent = `${balance.toFixed(2)} ₽`;
+        }
+        
+        function showBalanceOperations() {
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthTransactions = transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transactionDate.getMonth() === currentMonth && 
+                       transactionDate.getFullYear() === currentYear &&
+                       transaction.incomeType === currentIncomeType;
+            });
+            
+            const totalIncome = monthTransactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const totalExpenses = monthTransactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            let operationsHTML = `
+                <button class="back-button" id="back-to-form">← Назад</button>
+                <h3>Операции за ${currentMonthElement.textContent}</h3>
+                <div class="distribution-summary">
+                    <div class="summary-row">
+                        <div>Доходы:</div>
+                        <div class="income">${totalIncome.toFixed(2)} ₽</div>
+                    </div>
+                    <div class="summary-row">
+                        <div>Расходы:</div>
+                        <div class="expenses">${totalExpenses.toFixed(2)} ₽</div>
+                    </div>
+                    <div class="summary-row" style="font-weight: bold; border-top: 1px solid #ddd; padding-top: 8px;">
+                        <div>Баланс:</div>
+                        <div class="balance">${(totalIncome - totalExpenses).toFixed(2)} ₽</div>
+                    </div>
+                </div>
+            `;
+            
+            if (monthTransactions.length === 0) {
+                operationsHTML += '<div class="empty-state">Нет операций за этот месяц</div>';
+            } else {
+                operationsHTML += '<h4>Все операции</h4><div class="operations-list">';
+                
+                monthTransactions.forEach(transaction => {
+                    operationsHTML += `
+                        <div class="operation-item">
+                            <div class="operation-info">
+                                <div>${transaction.category}</div>
+                                <div class="operation-description">${transaction.description}</div>
+                                <div class="operation-category">${transaction.type === 'income' ? 'Доход' : 'Расход'} • ${transaction.incomeType === 'salary' ? 'Зарплата' : 'Аванс'}</div>
+                            </div>
+                            <div class="operation-amount ${transaction.type}">${transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)} ₽</div>
+                            <button class="delete-btn" data-id="${transaction.id}">×</button>
+                        </div>
+                    `;
+                });
+                
+                operationsHTML += '</div>';
+            }
+            
+            document.getElementById('add-tab').innerHTML = operationsHTML;
+            document.getElementById('back-to-form').addEventListener('click', restoreAddTransactionForm);
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    deleteTransaction(id);
+                });
+            });
+            
+            switchTab('add');
+        }
+        
+        function showCombinedIncomeInfo() {
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthIncomeTransactions = transactions.filter(transaction => {
+                const transactionDate = new Date(transaction.date);
+                return transactionDate.getMonth() === currentMonth && 
+                       transactionDate.getFullYear() === currentYear &&
+                       transaction.type === 'income';
+            });
+            
+            const salaryIncome = monthIncomeTransactions
+                .filter(t => t.incomeType === 'salary')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const advanceIncome = monthIncomeTransactions
+                .filter(t => t.incomeType === 'advance')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalIncome = salaryIncome + advanceIncome;
+            
+            let operationsHTML = `
+                <button class="back-button" id="back-to-form">← Назад</button>
+                <h3>Общая информация по доходам за ${currentMonthElement.textContent}</h3>
+                <div class="distribution-summary">
+                    <div class="summary-row">
+                        <div>Зарплата:</div>
+                        <div class="income">${salaryIncome.toFixed(2)} ₽</div>
+                    </div>
+                    <div class="summary-row">
+                        <div>Аванс:</div>
+                        <div class="income">${advanceIncome.toFixed(2)} ₽</div>
+                    </div>
+                    <div class="summary-row" style="font-weight: bold; border-top: 1px solid #ddd; padding-top: 8px;">
+                        <div>Общий доход:</div>
+                        <div class="income">${totalIncome.toFixed(2)} ₽</div>
+                    </div>
+                </div>
+            `;
+            
+            // Добавляем информацию о распределении
+            const monthKey = `${currentYear}_${currentMonth}`;
+            if (appliedDistributions[monthKey]) {
+                operationsHTML += `<h4>Распределение доходов</h4>`;
+                const distribution = appliedDistributions[monthKey];
+                
+                Object.keys(distribution).forEach(incomeType => {
+                    const dist = distribution[incomeType];
+                    operationsHTML += `
+                        <div style="margin-bottom: 15px;">
+                            <h5>${incomeType === 'salary' ? 'Зарплата' : 'Аванс'}</h5>
+                    `;
+                    
+                    if (Object.keys(dist.categories).length === 0) {
+                        operationsHTML += '<p>Нет распределения</p>';
+                    } else {
+                        Object.keys(dist.categories).forEach(category => {
+                            const percent = dist.categories[category];
+                            const amount = dist.totalIncome * (percent / 100);
+                            operationsHTML += `
+                                <div class="distribution-info-item">
+                                    <div>${category}:</div>
+                                    <div>${percent}% (${amount.toFixed(2)} ₽)</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    operationsHTML += `</div>`;
+                });
+            }
+            
+            if (monthIncomeTransactions.length === 0) {
+                operationsHTML += '<div class="empty-state">Нет операций по доходам за этот месяц</div>';
+            } else {
+                operationsHTML += '<h4>Все операции по доходам</h4><div class="operations-list">';
+                
+                monthIncomeTransactions.forEach(transaction => {
+                    operationsHTML += `
+                        <div class="operation-item">
+                            <div class="operation-info">
+                                <div>${transaction.category}</div>
+                                <div class="operation-description">${transaction.description}</div>
+                                <div class="operation-category">${transaction.incomeType === 'salary' ? 'Зарплата' : 'Аванс'}</div>
+                            </div>
+                            <div class="operation-amount income">+${transaction.amount.toFixed(2)} ₽</div>
+                            <button class="delete-btn" data-id="${transaction.id}">×</button>
+                        </div>
+                    `;
+                });
+                
+                operationsHTML += '</div>';
+            }
+            
+            // Добавляем кнопки импорта/экспорта
+            operationsHTML += `
+                <div class="import-export">
+                    <button class="btn-secondary" id="export-excel-btn">Экспорт в Excel</button>
+                    <button class="btn-secondary" id="import-excel-btn">Импорт из Excel</button>
+                </div>
+            `;
+            
+            document.getElementById('add-tab').innerHTML = operationsHTML;
+            document.getElementById('back-to-form').addEventListener('click', restoreAddTransactionForm);
+            document.getElementById('export-excel-btn').addEventListener('click', exportToExcel);
+            document.getElementById('import-excel-btn').addEventListener('click', importFromExcel);
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.getAttribute('data-id'));
+                    deleteTransaction(id);
+                });
+            });
+            
+            switchTab('add');
+        }
+        
+        function showDistributionInfoPage() {
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            const monthKey = `${currentYear}_${currentMonth}`;
+            
+            let operationsHTML = `
+                <button class="back-button" id="back-to-form">← Назад</button>
+                <div class="distribution-header">
+                    <h3>Распределение доходов</h3>
+                    <button class="settings-btn" id="distribution-settings-btn" title="Настройки">⚙️</button>
+                </div>
+            `;
+            
+            // Индикатор режима редактирования
+            if (isEditMode) {
+                operationsHTML += `
+                    <div class="edit-mode-active">
+                        <div class="edit-mode-indicator">
+                            <span>Режим редактирования</span>
+                            <button class="btn-secondary" id="exit-edit-mode">Завершить</button>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (appliedDistributions[monthKey]) {
+                const distribution = appliedDistributions[monthKey];
+                
+                operationsHTML += `
+                    <div class="distribution-info">
+                        <h4>Распределение за ${currentMonthElement.textContent}</h4>
+                `;
+                
+                Object.keys(distribution).forEach(incomeType => {
+                    const dist = distribution[incomeType];
+                    operationsHTML += `
+                        <div style="margin-bottom: 15px;">
+                            <h5>${incomeType === 'salary' ? 'Зарплата' : 'Аванс'}</h5>
+                    `;
+                    
+                    if (Object.keys(dist.categories).length === 0) {
+                        operationsHTML += '<p>Нет распределения</p>';
+                    } else {
+                        Object.keys(dist.categories).forEach(category => {
+                            const percent = dist.categories[category];
+                            const amount = dist.totalIncome * (percent / 100);
+                            
+                            let deleteButton = '';
+                            if (isEditMode) {
+                                deleteButton = `<button class="btn-danger action-btn delete-distribution-btn" data-category="${category}" data-incometype="${incomeType}">×</button>`;
+                            }
+                            
+                            operationsHTML += `
+                                <div class="distribution-item">
+                                    <div class="distribution-category">${category}</div>
+                                    <div class="distribution-controls">
+                                        <div class="distribution-amount">${percent}% (${amount.toFixed(2)} ₽)</div>
+                                        ${deleteButton}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    operationsHTML += `</div>`;
+                });
+                
+                operationsHTML += `</div>`;
+            } else {
+                operationsHTML += '<div class="empty-state">Распределение не применено для этого месяца</div>';
+            }
+            
+            document.getElementById('add-tab').innerHTML = operationsHTML;
+            
+            // Обработчики событий для страницы распределения
+            document.getElementById('back-to-form').addEventListener('click', restoreAddTransactionForm);
+            
+            const distributionSettingsBtn = document.getElementById('distribution-settings-btn');
+            if (distributionSettingsBtn) {
+                distributionSettingsBtn.addEventListener('click', toggleDistributionSettingsMenu);
+            }
+            
+            const exitEditModeBtn = document.getElementById('exit-edit-mode');
+            if (exitEditModeBtn) {
+                exitEditModeBtn.addEventListener('click', disableEditMode);
+            }
+            
+            // Обработчики для кнопок удаления в режиме редактирования
+            if (isEditMode) {
+                document.querySelectorAll('.delete-distribution-btn').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const category = e.target.getAttribute('data-category');
+                        const incomeType = e.target.getAttribute('data-incometype');
+                        deleteDistributionCategory(category, incomeType);
+                    });
+                });
+            }
+            
+            // Закрытие меню настроек при клике вне его
+            document.addEventListener('click', (e) => {
+                const settingsBtn = document.getElementById('distribution-settings-btn');
+                if (settingsBtn && !settingsBtn.contains(e.target) && !settingsMenu.contains(e.target)) {
+                    settingsMenu.classList.remove('show');
+                }
+            });
+            
+            switchTab('add');
+        }
+        
+        function toggleDistributionSettingsMenu(e) {
+            e.stopPropagation();
+            settingsMenu.classList.toggle('show');
+            
+            // Позиционирование меню
+            const rect = document.getElementById('distribution-settings-btn').getBoundingClientRect();
+            settingsMenu.style.position = 'fixed';
+            settingsMenu.style.top = `${rect.bottom + window.scrollY}px`;
+            settingsMenu.style.right = `${window.innerWidth - rect.right}px`;
+        }
+        
+        function enableEditMode() {
+            isEditMode = true;
+            settingsMenu.classList.remove('show');
+            showDistributionInfoPage(); // Перезагружаем страницу для отображения кнопок удаления
+        }
+        
+        function disableEditMode() {
+            isEditMode = false;
+            showDistributionInfoPage(); // Перезагружаем страницу для скрытия кнопок удаления
+        }
+        
+        function deleteDistributionCategory(category, incomeType) {
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            const monthKey = `${currentYear}_${currentMonth}`;
+            
+            if (appliedDistributions[monthKey] && appliedDistributions[monthKey][incomeType]) {
+                delete appliedDistributions[monthKey][incomeType].categories[category];
+                saveAppliedDistributions();
+                
+                // Также удаляем соответствующие транзакции планируемых расходов
+                transactions = transactions.filter(t => 
+                    !(t.type === 'expense' && 
+                      new Date(t.date).getMonth() === currentMonth && 
+                      new Date(t.date).getFullYear() === currentYear &&
+                      t.incomeType === incomeType &&
+                      t.description.includes(`Планируемые расходы: ${category}`))
+                );
+                saveTransactions();
+                
+                alert(`Категория "${category}" удалена из распределения`);
+                showDistributionInfoPage();
+                updateSummary();
+                updateDistributionInfo();
+            }
+        }
+        
+        function updateDistributionInfo() {
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            const monthKey = `${currentYear}_${currentMonth}`;
+            
+            if (appliedDistributions[monthKey]) {
+                distributionInfoSection.style.display = 'block';
+                const distribution = appliedDistributions[monthKey];
+                
+                let infoHTML = '';
+                
+                Object.keys(distribution).forEach(incomeType => {
+                    const dist = distribution[incomeType];
+                    infoHTML += `<div style="margin-bottom: 10px;"><strong>${incomeType === 'salary' ? 'Зарплата' : 'Аванс'}</strong>`;
+                    
+                    if (Object.keys(dist.categories).length === 0) {
+                        infoHTML += '<div>Нет распределения</div>';
+                    } else {
+                        Object.keys(dist.categories).forEach(category => {
+                            const percent = dist.categories[category];
+                            infoHTML += `<div class="distribution-info-item">${category}: ${percent}%</div>`;
+                        });
+                    }
+                    
+                    infoHTML += `</div>`;
+                });
+                
+                distributionInfoContent.innerHTML = infoHTML;
+            } else {
+                distributionInfoSection.style.display = 'none';
+            }
+        }
+        
+        function switchTab(tabId) {
+            tabs.forEach(tab => {
+                if (tab.getAttribute('data-tab') === tabId) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            tabContents.forEach(content => {
+                if (content.id === `${tabId}-tab`) {
+                    content.style.display = 'block';
+                } else {
+                    content.style.display = 'none';
+                }
+            });
+            
+            if (tabId === 'distribution') {
+                updateDistribution();
+            }
+        }
+        
+        function restoreAddTransactionForm() {
+            const formHTML = `
+                <form class="transaction-form" id="transaction-form">
+                    <div class="form-group">
+                        <label for="type">Тип операции</label>
+                        <select id="type" required>
+                            <option value="income">Доход</option>
+                            <option value="expense">Расход</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Категория</label>
+                        <select id="category" required>
+                            <option value="Зарплата">Зарплата</option>
+                            <option value="Аванс">Аванс</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="amount">Сумма (₽)</label>
+                        <input type="number" id="amount" min="0" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Описание</label>
+                        <textarea id="description" placeholder="Введите описание операции"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date">Дата</label>
+                        <input type="date" id="date" required>
+                    </div>
+                    
+                    <button type="submit" class="btn-primary">Добавить операцию</button>
+                </form>
+                
+                <div id="distribution-info-section" class="distribution-info" style="display: none;">
+                    <h4>Распределение доходов</h4>
+                    <div id="distribution-info-content"></div>
+                </div>
+            `;
+            
+            document.getElementById('add-tab').innerHTML = formHTML;
+            document.getElementById('transaction-form').addEventListener('submit', addTransaction);
+            document.getElementById('date').valueAsDate = new Date();
+            updateDistributionInfo();
+        }
+        
+        function deleteTransaction(id) {
+            transactions = transactions.filter(transaction => transaction.id !== id);
+            saveTransactions();
+            updateSummary();
+            updateDistribution();
+            updateDistributionInfo();
+            
+            if (document.getElementById('back-to-form')) {
+                showBalanceOperations();
+            }
+        }
+        
+        function updateDistribution() {
+            distributionListElement.innerHTML = '';
+            
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthIncome = transactions
+                .filter(t => t.type === 'income' && 
+                    new Date(t.date).getMonth() === currentMonth && 
+                    new Date(t.date).getFullYear() === currentYear &&
+                    t.incomeType === currentIncomeType)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const monthExpenses = transactions
+                .filter(t => t.type === 'expense' && 
+                    new Date(t.date).getMonth() === currentMonth && 
+                    new Date(t.date).getFullYear() === currentYear &&
+                    t.incomeType === currentIncomeType)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const balance = monthIncome - monthExpenses;
+            
+            const allocatedAmount = transactions
+                .filter(t => t.type === 'expense' && 
+                    new Date(t.date).getMonth() === currentMonth && 
+                    new Date(t.date).getFullYear() === currentYear &&
+                    t.incomeType === currentIncomeType &&
+                    t.description.includes('Планируемые расходы'))
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const availableForDistribution = balance - allocatedAmount;
+            const totalPercent = Object.values(currentDistribution).reduce((sum, val) => sum + val, 0);
+            
+            if (Object.keys(currentDistribution).length === 0) {
+                distributionListElement.innerHTML = `
+                    <div class="empty-state">
+                        <p>Нет добавленных категорий распределения</p>
+                        <p>Нажмите на кнопку "+", чтобы добавить первую категорию</p>
+                    </div>
+                `;
+            } else {
+                Object.keys(currentDistribution).forEach(category => {
+                    const percent = currentDistribution[category] || 0;
+                    const amount = availableForDistribution * (percent / 100);
+                    
+                    const distributionItem = document.createElement('div');
+                    distributionItem.className = 'distribution-item';
+                    
+                    distributionItem.innerHTML = `
+                        <div class="distribution-category">${category}</div>
+                        <div class="distribution-controls">
+                            <input type="number" class="distribution-percent" data-category="${category}" 
+                                   value="${percent}" min="0" max="100" step="1"> %
+                            <div class="distribution-amount">${amount.toFixed(2)} ₽</div>
+                            <div class="category-actions">
+                                <button class="btn-primary action-btn edit-category-btn" data-category="${category}">✎</button>
+                                <button class="btn-danger action-btn delete-category-btn" data-category="${category}">×</button>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percent}%"></div>
+                        </div>
+                    `;
+                    
+                    distributionListElement.appendChild(distributionItem);
+                    
+                    const percentInput = distributionItem.querySelector('.distribution-percent');
+                    percentInput.addEventListener('change', (e) => {
+                        const category = e.target.getAttribute('data-category');
+                        const value = parseFloat(e.target.value) || 0;
+                        currentDistribution[category] = value;
+                        saveCurrentDistribution(currentDistribution);
+                        updateDistribution();
+                    });
+                    
+                    distributionItem.querySelector('.edit-category-btn').addEventListener('click', (e) => {
+                        const category = e.target.getAttribute('data-category');
+                        showEditCategoryModal(category);
+                    });
+                    
+                    distributionItem.querySelector('.delete-category-btn').addEventListener('click', (e) => {
+                        const category = e.target.getAttribute('data-category');
+                        showDeleteCategoryModal(category);
+                    });
+                });
+            }
+            
+            totalIncomeSummaryElement.textContent = `${monthIncome.toFixed(2)} ₽`;
+            allocatedSummaryElement.textContent = `${allocatedAmount.toFixed(2)} ₽`;
+            availableSummaryElement.textContent = `${availableForDistribution.toFixed(2)} ₽`;
+            usedPercentElement.textContent = `${totalPercent}%`;
+            
+            if (totalPercent > 100) {
+                const warningElement = document.createElement('div');
+                warningElement.style.color = '#dc3545';
+                warningElement.style.marginTop = '10px';
+                warningElement.style.textAlign = 'center';
+                warningElement.textContent = 'Внимание: распределено более 100% доходов!';
+                distributionListElement.appendChild(warningElement);
+            }
+        }
+        
+        function applyDistribution() {
+            if (Object.keys(currentDistribution).length === 0) {
+                alert('Нет категорий для распределения. Сначала добавьте категории.');
+                return;
+            }
+            
+            const currentMonth = currentDate.getMonth();
+            const currentYear = currentDate.getFullYear();
+            
+            const monthIncome = transactions
+                .filter(t => t.type === 'income' && 
+                    new Date(t.date).getMonth() === currentMonth && 
+                    new Date(t.date).getFullYear() === currentYear &&
+                    t.incomeType === currentIncomeType)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const monthExpenses = transactions
+                .filter(t => t.type === 'expense' && 
+                    new Date(t.date).getMonth() === currentMonth && 
+                    new Date(t.date).getFullYear() === currentYear &&
+                    t.incomeType === currentIncomeType)
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const balance = monthIncome - monthExpenses;
+            
+            const allocatedAmount = transactions
+                .filter(t => t.type === 'expense' && 
+                    new Date(t.date).getMonth() === currentMonth && 
+                    new Date(t.date).getFullYear() === currentYear &&
+                    t.incomeType === currentIncomeType &&
+                    t.description.includes('Планируемые расходы'))
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const availableForDistribution = balance - allocatedAmount;
+            
+            transactions = transactions.filter(t => 
+                !(t.type === 'expense' && 
+                  new Date(t.date).getMonth() === currentMonth && 
+                  new Date(t.date).getFullYear() === currentYear &&
+                  t.incomeType === currentIncomeType &&
+                  t.description.includes('Планируемые расходы')));
+            
+            Object.keys(currentDistribution).forEach(category => {
+                const percent = currentDistribution[category];
+                if (percent > 0) {
+                    const amount = availableForDistribution * (percent / 100);
+                    if (amount > 0) {
+                        const transaction = {
+                            id: Date.now() + Math.floor(Math.random() * 1000),
+                            type: 'expense',
+                            category: category,
+                            amount: amount,
+                            incomeType: currentIncomeType,
+                            description: `Планируемые расходы: ${category}`,
+                            date: `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-15`
+                        };
+                        
+                        transactions.push(transaction);
+                    }
+                }
+            });
+            
+            const monthKey = `${currentYear}_${currentMonth}`;
+            if (!appliedDistributions[monthKey]) {
+                appliedDistributions[monthKey] = {};
+            }
+            
+            appliedDistributions[monthKey][currentIncomeType] = {
+                categories: {...currentDistribution},
+                totalIncome: monthIncome,
+                appliedDate: new Date().toISOString()
+            };
+            
+            saveAppliedDistributions();
+            saveTransactions();
+            updateSummary();
+            updateDistribution();
+            updateDistributionInfo();
+            alert('Распределение применено! Созданы транзакции для запланированных расходов.');
+        }
+        
+        // Экспорт в Excel
+        function exportToExcel() {
+            let csv = 'ID,Тип,Категория,Сумма,Тип дохода,Описание,Дата\n';
+            
+            transactions.forEach(transaction => {
+                csv += `${transaction.id},${transaction.type},${transaction.category},${transaction.amount},${transaction.incomeType},"${transaction.description}",${transaction.date}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `бюджет_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Импорт из Excel
+        function importFromExcel() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.csv,.xlsx,.xls';
+            fileInput.style.visibility = 'hidden';
+            
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const csvData = event.target.result;
+                        const lines = csvData.split('\n');
+                        const importedTransactions = [];
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (!line) continue;
+                            
+                            const parts = line.split(',');
+                            if (parts.length >= 7) {
+                                const transaction = {
+                                    id: parseInt(parts[0]) || Date.now() + i,
+                                    type: parts[1],
+                                    category: parts[2],
+                                    amount: parseFloat(parts[3]),
+                                    incomeType: parts[4] || 'salary',
+                                    description: parts[5].replace(/"/g, ''),
+                                    date: parts[6]
+                                };
+                                
+                                importedTransactions.push(transaction);
+                            }
+                        }
+                        
+                        // Заменяем текущие данные импортированными
+                        transactions = importedTransactions;
+                        saveTransactions();
+                        updateSummary();
+                        updateDistribution();
+                        updateDistributionInfo();
+                        
+                        alert(`Успешно импортировано ${importedTransactions.length} операций`);
+                        restoreAddTransactionForm();
+                    } catch (error) {
+                        alert('Ошибка при импорте файла. Убедитесь, что файл имеет правильный формат.');
+                        console.error(error);
+                    }
+                };
+                
+                reader.readAsText(file);
+            });
+            
+            document.body.appendChild(fileInput);
+            fileInput.click();
+            document.body.removeChild(fileInput);
+        }
+        
+        // Функции модальных окон
+        function showAddCategoryModal() {
+            document.getElementById('new-category-name').value = '';
+            document.getElementById('new-category-percent').value = '';
+            addCategoryModal.classList.add('show');
+        }
+        
+        function hideAddCategoryModal() {
+            addCategoryModal.classList.remove('show');
+        }
+        
+        function saveNewCategory() {
+            const categoryName = document.getElementById('new-category-name').value.trim();
+            const percent = parseFloat(document.getElementById('new-category-percent').value) || 0;
+            
+            if (!categoryName) {
+                alert('Введите название категории');
+                return;
+            }
+            
+            if (percent < 0 || percent > 100) {
+                alert('Процент должен быть от 0 до 100');
+                return;
+            }
+            
+            if (currentDistribution.hasOwnProperty(categoryName)) {
+                alert('Категория с таким названием уже существует');
+                return;
+            }
+            
+            currentDistribution[categoryName] = percent;
+            
+            if (!customCategories.includes(categoryName)) {
+                customCategories.push(categoryName);
+                saveCustomCategories();
+            }
+            
+            saveCurrentDistribution(currentDistribution);
+            updateDistribution();
+            hideAddCategoryModal();
+        }
+        
+        function showEditCategoryModal(categoryName) {
+            currentEditingCategory = categoryName;
+            document.getElementById('edit-category-name').value = currentEditingCategory;
+            document.getElementById('edit-category-percent').value = currentDistribution[currentEditingCategory];
+            editCategoryModal.classList.add('show');
+        }
+        
+        function hideEditCategoryModal() {
+            editCategoryModal.classList.remove('show');
+            currentEditingCategory = null;
+        }
+        
+        function saveEditedCategory() {
+            const newCategoryName = document.getElementById('edit-category-name').value.trim();
+            const newPercent = parseFloat(document.getElementById('edit-category-percent').value) || 0;
+            
+            if (!newCategoryName) {
+                alert('Введите название категории');
+                return;
+            }
+            
+            if (newPercent < 0 || newPercent > 100) {
+                alert('Процент должен быть от 0 до 100');
+                return;
+            }
+            
+            if (newCategoryName !== currentEditingCategory) {
+                delete currentDistribution[currentEditingCategory];
+                
+                if (customCategories.includes(currentEditingCategory)) {
+                    customCategories = customCategories.filter(cat => cat !== currentEditingCategory);
+                    customCategories.push(newCategoryName);
+                    saveCustomCategories();
+                }
+            }
+            
+            currentDistribution[newCategoryName] = newPercent;
+            saveCurrentDistribution(currentDistribution);
+            updateDistribution();
+            hideEditCategoryModal();
+        }
+        
+        function showDeleteCategoryModal(categoryName) {
+            currentEditingCategory = categoryName;
+            document.getElementById('delete-category-name').textContent = currentEditingCategory;
+            deleteCategoryModal.classList.add('show');
+        }
+        
+        function hideDeleteCategoryModal() {
+            deleteCategoryModal.classList.remove('show');
+            currentEditingCategory = null;
+        }
+        
+        function confirmDeleteCategoryAction() {
+            if (!currentEditingCategory) return;
+            
+            delete currentDistribution[currentEditingCategory];
+            
+            if (customCategories.includes(currentEditingCategory)) {
+                customCategories = customCategories.filter(cat => cat !== currentEditingCategory);
+                saveCustomCategories();
+            }
+            
+            saveCurrentDistribution(currentDistribution);
+            updateDistribution();
+            hideDeleteCategoryModal();
+        }
+        
+        // Запуск приложения
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Инициализация меню настроек
+        editDistributionBtn.addEventListener('click', enableEditMode);
+    </script>
+</body>
+</html>
